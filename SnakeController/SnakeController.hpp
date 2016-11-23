@@ -27,8 +27,8 @@ struct UnexpectedEventException : std::runtime_error
 class Controller : public IEventHandler
 {
 public:
-    Controller(IPort& p_displayPort, IPort& p_foodPort, IPort& p_scorePort, std::string const& p_config);
-    ~Controller();
+    Controller(IPort& displayPort, IPort& foodPort, IPort& scorePort, std::string const& config);
+    ~Controller() override;
 
     Controller(Controller const& p_rhs) = delete;
     Controller& operator=(Controller const& p_rhs) = delete;
@@ -49,14 +49,14 @@ private:
     void handleFoodResp(std::unique_ptr<Event>);
     void handlePauseInd(std::unique_ptr<Event>);
 
-    void updateSegmentsIfSuccessfullMove(int x, int y);
-    void addHeadSegment(int x, int y);
-    void removeTailSegmentIfNotScored(int x, int y);
+    void updateSegmentsIfSuccessfullMove(Position position);
+    void addHeadSegment(Position position);
+    void removeTailSegmentIfNotScored(Position position);
     void removeTailSegment();
 
-    void updateFoodPosition(int x, int y, std::function<void()> clearPolicy);
+    void updateFoodPosition(Position position, std::function<void()> clearPolicy);
     void sendClearOldFood();
-    void sendPlaceNewFood(int x, int y);
+    void sendPlaceNewFood(Position position);
 
     bool m_paused;
 };
