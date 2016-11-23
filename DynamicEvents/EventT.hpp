@@ -24,7 +24,7 @@ public:
     EventT& operator=(EventT<T> const&) = delete;
 
     std::uint32_t getMessageId() const override { return T::MESSAGE_ID; };
-    std::unique_ptr<Event> clone() const { return std::make_unique<EventT<T>>(*m_payload); }
+    std::unique_ptr<Event> clone() const override { return std::make_unique<EventT<T>>(*m_payload); }
 
     T * const operator->() noexcept { return m_payload.get(); }
     T const * const operator->() const noexcept { return m_payload.get(); }
@@ -39,11 +39,11 @@ private:
 template <class T>
 T const& payload(Event const& p_evt)
 {
-    return *dynamic_cast<EventT<T> const&>(p_evt);
+    return *static_cast<EventT<T> const&>(p_evt);
 }
 
 template <class T>
 T& payload(Event& p_evt)
 {
-    return *dynamic_cast<EventT<T>&>(p_evt);
+    return *static_cast<EventT<T>&>(p_evt);
 }
