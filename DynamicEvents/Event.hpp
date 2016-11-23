@@ -3,8 +3,9 @@
 #include <cstdint>
 #include <memory>
 
-struct Event
+class Event
 {
+public:
     virtual ~Event() = default;
 
     virtual std::uint32_t getMessageId() const = 0;
