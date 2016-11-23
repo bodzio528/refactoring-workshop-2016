@@ -23,6 +23,20 @@ struct UnexpectedEventException : std::runtime_error
     UnexpectedEventException();
 };
 
+class World
+{
+public:
+    World(std::pair<int, int> dimension, std::pair<int, int> food);
+
+    void setFoodPosition(std::pair<int, int> position);
+    std::pair<int, int> getFoodPosition() const;
+
+    bool contains(int x, int y) const;
+private:
+    std::pair<int, int> m_foodPosition;
+    std::pair<int, int> m_dimension;
+};
+
 class Controller : public IEventHandler
 {
 public:
@@ -39,9 +53,7 @@ private:
     IPort& m_foodPort;
     IPort& m_scorePort;
 
-    std::pair<int, int> m_mapDimension;
-    std::pair<int, int> m_foodPosition;
-
+    std::unique_ptr<World> m_world;
     std::unique_ptr<Segments> m_segments;
 
     void handleTimeoutInd();
@@ -54,8 +66,6 @@ private:
     void addHeadSegment(int x, int y);
     void removeTailSegmentIfNotScored(int x, int y);
     void removeTailSegment();
-
-    bool isPositionOutsideMap(int x, int y) const;
 
     void updateFoodPosition(int x, int y, std::function<void()> clearPolicy);
     void sendClearOldFood();
