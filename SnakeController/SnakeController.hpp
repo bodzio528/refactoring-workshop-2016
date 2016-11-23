@@ -12,6 +12,7 @@ class IPort;
 namespace Snake
 {
 class Segments;
+class World;
 
 struct ConfigurationError : std::logic_error
 {
@@ -21,20 +22,6 @@ struct ConfigurationError : std::logic_error
 struct UnexpectedEventException : std::runtime_error
 {
     UnexpectedEventException();
-};
-
-class World
-{
-public:
-    World(std::pair<int, int> dimension, std::pair<int, int> food);
-
-    void setFoodPosition(std::pair<int, int> position);
-    std::pair<int, int> getFoodPosition() const;
-
-    bool contains(int x, int y) const;
-private:
-    std::pair<int, int> m_foodPosition;
-    std::pair<int, int> m_dimension;
 };
 
 class Controller : public IEventHandler
