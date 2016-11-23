@@ -21,6 +21,26 @@ struct UnexpectedEventException : std::runtime_error
     UnexpectedEventException();
 };
 
+class Segments
+{
+    struct Position
+    {
+        int x, y;
+    };
+public:
+    Segments(Direction direction);
+
+    void addSegment(int x, int y);
+    bool isCollision(int x, int y) const;
+    void addHead(int x, int y);
+    std::pair<int, int> nextHead() const;
+    std::pair<int, int> removeTail();
+    void updateDirection(Direction newDirection);
+private:
+    Direction m_headDirection;
+    std::list<Position> m_segments;
+};
+
 class Controller : public IEventHandler
 {
 public:
@@ -39,14 +59,7 @@ private:
     std::pair<int, int> m_mapDimension;
     std::pair<int, int> m_foodPosition;
 
-    struct Segment
-    {
-        int x;
-        int y;
-    };
-
-    std::list<Segment> m_segments;
-    Direction m_currentDirection;
+    std::unique_ptr<Segments> m_segments;
 
     void handleTimeoutInd();
     void handleDirectionInd(std::unique_ptr<Event>);
@@ -54,11 +67,9 @@ private:
     void handleFoodResp(std::unique_ptr<Event>);
     void handlePauseInd(std::unique_ptr<Event>);
 
-    bool isSegmentAtPosition(int x, int y) const;
-    Segment calculateNewHead() const;
-    void updateSegmentsIfSuccessfullMove(Segment const& newHead);
-    void addHeadSegment(Segment const& newHead);
-    void removeTailSegmentIfNotScored(Segment const& newHead);
+    void updateSegmentsIfSuccessfullMove(int x, int y);
+    void addHeadSegment(int x, int y);
+    void removeTailSegmentIfNotScored(int x, int y);
     void removeTailSegment();
 
     bool isPositionOutsideMap(int x, int y) const;
