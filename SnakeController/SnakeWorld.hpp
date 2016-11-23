@@ -2,7 +2,7 @@
 
 #include <functional>
 
-#include "SnakePosition.hpp"
+#include "SnakeIWorld.hpp"
 #include "SnakeDimension.hpp"
 
 class IPort;
@@ -11,14 +11,14 @@ namespace Snake
 {
 class Segments;
 
-class World
+class World : public IWorld
 {
 public:
     World(IPort& displayPort, IPort& foodPort, Dimension dimension, Position food);
+    ~World() override = default;
 
-
-    bool contains(Position position) const;
-    bool eatFood(Position position) const;
+    bool tryWalk(Position position) const override;
+    bool tryEat(Position position) const override;
 
     void updateFoodPosition(Position position, Segments const& segments);
     void placeFood(Position position, Segments const& segments);

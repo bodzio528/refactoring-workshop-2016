@@ -9,14 +9,14 @@ class IPort;
 
 namespace Snake
 {
-class World;
+class IWorld;
 
 class Segments
 {
 public:
     Segments(IPort& displayPort, IPort& scorePort, Direction direction);
 
-    void nextStep(World const& world);
+    void nextStep(IWorld const& world);
 
     void addSegment(Position position);
     void updateDirection(Direction newDirection);
@@ -36,8 +36,8 @@ private:
 
     void removeTailSegment();
     void addHeadSegment(Position position);
-    void removeTailSegmentIfNotScored(Position position, World const& world);
-    void updateSegments(Position position, World const& world);
+    void removeTailSegmentIfNotScored(Position position, IWorld const& world);
+    void updateSegments(Position position, IWorld const& world);
 };
 
 } // namespace Snake

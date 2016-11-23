@@ -5,7 +5,7 @@
 #include "IPort.hpp"
 #include "EventT.hpp"
 
-#include "SnakeWorld.hpp"
+#include "SnakeIWorld.hpp"
 
 namespace Snake
 {
@@ -24,8 +24,7 @@ bool isVertical(Direction direction)
 
 bool isPositive(Direction direction)
 {
-    return (isVertical(direction) and Direction_DOWN == direction)
-        or (isHorizontal(direction) and Direction_RIGHT == direction);
+    return Direction_DOWN == direction or Direction_RIGHT == direction;
 }
 
 bool perpendicular(Direction dir1, Direction dir2)
@@ -47,8 +46,7 @@ void Segments::addSegment(Position position)
 
 bool Segments::isCollision(Position position) const
 {
-    return m_segments.end() !=  std::find_if(m_segments.cbegin(), m_segments.cend(),
-        [position](auto const& segment){ return segment.x == position.x and segment.y == position.y; });
+    return m_segments.end() != std::find(m_segments.cbegin(), m_segments.cend(), position);
 }
 
 void Segments::addHead(Position position)
@@ -65,7 +63,7 @@ Position Segments::removeTail()
 
 Position Segments::nextHead() const
 {
-    Position const& currentHead = m_segments.front();
+    auto currentHead = m_segments.front();
 
     Position newHead;
     newHead.x = currentHead.x + (isHorizontal(m_headDirection) ? isPositive(m_headDirection) ? 1 : -1 : 0);
@@ -81,7 +79,7 @@ void Segments::updateDirection(Direction newDirection)
     }
 }
 
-void Segments::nextStep(const World &world)
+void Segments::nextStep(IWorld const& world)
 {
     updateSegments(nextHead(), world);
 }
@@ -106,9 +104,9 @@ void Segments::addHeadSegment(Position position)
     m_displayPort.send(std::make_unique<EventT<DisplayInd>>(placeNewHead));
 }
 
-void Segments::removeTailSegmentIfNotScored(Position position, const World &world)
+void Segments::removeTailSegmentIfNotScored(Position position, IWorld const& world)
 {
-    if (world.eatFood(position)) {
+    if (world.tryEat(position)) {
         ScoreInd l_ind{};
         l_ind.score = m_segments.size() - 1;
         m_scorePort.send(std::make_unique<EventT<ScoreInd>>(l_ind));
@@ -117,9 +115,9 @@ void Segments::removeTailSegmentIfNotScored(Position position, const World &worl
     }
 }
 
-void Segments::updateSegments(Position position, const World &world)
+void Segments::updateSegments(Position position, IWorld const& world)
 {
-    if (isCollision(position) or not world.contains(position)) {
+    if (isCollision(position) or not world.tryWalk(position)) {
         m_scorePort.send(std::make_unique<EventT<LooseInd>>());
     } else {
         addHeadSegment(position);

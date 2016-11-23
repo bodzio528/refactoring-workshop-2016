@@ -16,12 +16,12 @@ World::World(IPort& displayPort, IPort& foodPort, Dimension dimension, Position 
       m_dimension(dimension)
 {}
 
-bool World::contains(Position position) const
+bool World::tryWalk(Position position) const
 {
     return m_dimension.isInside(position);
 }
 
-bool World::eatFood(Position position) const
+bool World::tryEat(Position position) const
 {
     bool eaten = (m_foodPosition == position);
     if (eaten) {
@@ -63,7 +63,7 @@ void World::sendClearOldFood()
 
 void World::updateFoodPositionWithCleanPolicy(Position position, const Segments &segments, std::function<void ()> clearPolicy)
 {
-    if (segments.isCollision(position) or not contains(position)) {
+    if (segments.isCollision(position) or not tryWalk(position)) {
         m_foodPort.send(std::make_unique<EventT<FoodReq>>());
         return;
     }
