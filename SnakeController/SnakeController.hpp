@@ -11,6 +11,8 @@ class IPort;
 
 namespace Snake
 {
+class Segments;
+
 struct ConfigurationError : std::logic_error
 {
     ConfigurationError();
@@ -21,30 +23,11 @@ struct UnexpectedEventException : std::runtime_error
     UnexpectedEventException();
 };
 
-class Segments
-{
-    struct Position
-    {
-        int x, y;
-    };
-public:
-    Segments(Direction direction);
-
-    void addSegment(int x, int y);
-    bool isCollision(int x, int y) const;
-    void addHead(int x, int y);
-    std::pair<int, int> nextHead() const;
-    std::pair<int, int> removeTail();
-    void updateDirection(Direction newDirection);
-private:
-    Direction m_headDirection;
-    std::list<Position> m_segments;
-};
-
 class Controller : public IEventHandler
 {
 public:
     Controller(IPort& p_displayPort, IPort& p_foodPort, IPort& p_scorePort, std::string const& p_config);
+    ~Controller();
 
     Controller(Controller const& p_rhs) = delete;
     Controller& operator=(Controller const& p_rhs) = delete;
