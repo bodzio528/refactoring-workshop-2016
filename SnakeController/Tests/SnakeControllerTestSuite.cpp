@@ -309,5 +309,4 @@ TEST_F(SnakeNewFoodTest, test_ReceiveFoodIndDetectsCollision_ThenRequestNewFood)
 
     sut->receive(std::make_unique<EventT<FoodInd>>(l_foodInd));
 }
-
 } // namespace Snake
