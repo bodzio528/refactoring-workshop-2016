@@ -107,9 +107,9 @@ void Segments::addHeadSegment(Position position)
 void Segments::removeTailSegmentIfNotScored(Position position, IWorld const& world)
 {
     if (world.tryEat(position)) {
-        ScoreInd l_ind{};
-        l_ind.score = m_segments.size() - 1;
-        m_scorePort.send(std::make_unique<EventT<ScoreInd>>(l_ind));
+        ScoreInd scoreInd{};
+        scoreInd.score = m_segments.size() - 1;
+        m_scorePort.send(std::make_unique<EventT<ScoreInd>>(scoreInd));
     } else {
         removeTailSegment();
     }
@@ -117,11 +117,13 @@ void Segments::removeTailSegmentIfNotScored(Position position, IWorld const& wor
 
 void Segments::updateSegments(Position position, IWorld const& world)
 {
-    if (isCollision(position) or not world.tryWalk(position)) {
+    auto nextPosition = world.tryWalk(position);
+
+    if (not nextPosition.is_initialized() or isCollision(*nextPosition)) {
         m_scorePort.send(std::make_unique<EventT<LooseInd>>());
     } else {
-        addHeadSegment(position);
-        removeTailSegmentIfNotScored(position, world);
+        addHeadSegment(*nextPosition);
+        removeTailSegmentIfNotScored(*nextPosition, world);
     }
 }
 

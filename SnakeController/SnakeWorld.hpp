@@ -17,13 +17,13 @@ public:
     World(IPort& displayPort, IPort& foodPort, Dimension dimension, Position food);
     ~World() override = default;
 
-    bool tryWalk(Position position) const override;
+    boost::optional<Position> tryWalk(Position position) const override;
     bool tryEat(Position position) const override;
 
     void updateFoodPosition(Position position, Segments const& segments);
     void placeFood(Position position, Segments const& segments);
 
-private:
+protected:
     IPort& m_displayPort;
     IPort& m_foodPort;
 

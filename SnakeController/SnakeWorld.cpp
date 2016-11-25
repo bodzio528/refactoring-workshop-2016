@@ -16,9 +16,9 @@ World::World(IPort& displayPort, IPort& foodPort, Dimension dimension, Position 
       m_dimension(dimension)
 {}
 
-bool World::tryWalk(Position position) const
+boost::optional<Position> World::tryWalk(Position position) const
 {
-    return m_dimension.isInside(position);
+    return boost::make_optional(m_dimension.isInside(position), position);
 }
 
 bool World::tryEat(Position position) const
