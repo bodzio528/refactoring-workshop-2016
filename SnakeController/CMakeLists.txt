@@ -17,12 +17,16 @@ enable_testing()
 set(TEST_SOURCES
     Tests/SnakeControllerTestSuite.cpp
 )
+
+set(TEST_HELPERS
+    Tests/SnakeControllerConfigBuilder.hpp)
+
 set(MOCK_LIST
     Tests/Mocks/PortMock.hpp
     Tests/Mocks/EventMatchers.hpp
 )
 set(UT_DRIVER ${TARGET_NAME}_UT)
-add_executable(${UT_DRIVER} ${TEST_SOURCES} ${MOCK_LIST})
+add_executable(${UT_DRIVER} ${TEST_SOURCES} ${MOCK_LIST} ${TEST_HELPERS})
 target_link_libraries(${UT_DRIVER} ${TARGET_NAME} gtest_main gmock)
 
 if (BUILD_COVERAGE_UNIT_TESTS)
