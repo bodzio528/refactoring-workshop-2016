@@ -8,6 +8,12 @@
 namespace Snake
 {
 
+enum class WorldType
+{
+    FLAT,
+    TORUS
+};
+
 class ConfigBuilder
 {
 public:
@@ -44,6 +50,22 @@ public:
         return *this;
     }
 
+    ConfigBuilder& setWorldType(WorldType newWorldType)
+    {
+        worldType = newWorldType;
+        return *this;
+    }
+
+    std::string convertWorldType(WorldType worldType)
+    {
+        switch(worldType)
+        {
+            case WorldType::FLAT: return "W";
+            case WorldType::TORUS: return "T";
+            default: return "unknown direction";
+        }
+    }
+
     std::string convertDirection(Direction direction)
     {
         switch(direction)
@@ -61,7 +83,9 @@ public:
     {
         std::ostringstream buff;
 
-        buff << "W " << worldX << " " << worldY << " F " << food.x << " " << food.y << " S " << convertDirection(snakeDirection) << " " << snake.size();
+        buff << convertWorldType(worldType) << " " << worldX << " " << worldY
+             << " F " << food.x << " " << food.y
+             << " S " << convertDirection(snakeDirection) << " " << snake.size();
 
         for(const Point& point : snake)
         {
@@ -77,6 +101,7 @@ private:
     Point food = Point{50, 50};
     Direction snakeDirection = Direction_LEFT;
     std::vector<Point> snake{Point{20,20}};
+    WorldType worldType { WorldType::FLAT };
 };
 
 } // namespace Snake
