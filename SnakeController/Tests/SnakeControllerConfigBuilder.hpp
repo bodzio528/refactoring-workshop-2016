@@ -19,8 +19,8 @@ class ConfigBuilder
 public:
     struct Point
     {
-        unsigned int x;
-        unsigned int y;
+        int x;
+        int y;
     };
 
     ConfigBuilder& setWorldSize(unsigned int x, unsigned int y)

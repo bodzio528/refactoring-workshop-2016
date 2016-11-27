@@ -42,7 +42,7 @@ struct TorusSnakeTest : Test
         sut->receive(directionInd.clone());
     }
 
-    void sendFoodResp(unsigned int x, unsigned int y)
+    void sendFoodResp(int x, int y)
     {
         EventT<FoodResp> foodResp(FoodResp{x, y});
 
