@@ -65,63 +65,36 @@ Controller::Controller(IPort& p_displayPort, IPort& p_foodPort, IPort& p_scorePo
 
 void Controller::handleTimePassed(const TimeoutInd&)
 {
-    Segment const& currentHead = m_segments.front();
+    Segment newHead = getNewHead();
 
-    Segment newHead;
-    newHead.x = currentHead.x + ((m_currentDirection & 0b01) ? (m_currentDirection & 0b10) ? 1 : -1 : 0);
-    newHead.y = currentHead.y + (not (m_currentDirection & 0b01) ? (m_currentDirection & 0b10) ? 1 : -1 : 0);
-    newHead.ttl = currentHead.ttl;
-
-    bool lost = false;
-
-    for (auto segment : m_segments) {
-        if (segment.x == newHead.x and segment.y == newHead.y) {
-            m_scorePort.send(std::make_unique<EventT<LooseInd>>());
-            lost = true;
-            break;
-        }
+    if(doesCollideWithSnake(newHead))
+    {
+        notifyAboutFailure();
+        return;
     }
-
-    if (not lost) {
-        if (std::make_pair(newHead.x, newHead.y) == m_foodPosition) {
-            m_scorePort.send(std::make_unique<EventT<ScoreInd>>());
-            m_foodPort.send(std::make_unique<EventT<FoodReq>>());
-        } else if (newHead.x < 0 or newHead.y < 0 or
-                   newHead.x >= m_mapDimension.first or
-                   newHead.y >= m_mapDimension.second) {
-            m_scorePort.send(std::make_unique<EventT<LooseInd>>());
-            lost = true;
-        } else {
-            for (auto &segment : m_segments) {
-                if (not --segment.ttl) {
-                    DisplayInd l_evt;
-                    l_evt.x = segment.x;
-                    l_evt.y = segment.y;
-                    l_evt.value = Cell_FREE;
-
-                    m_displayPort.send(std::make_unique<EventT<DisplayInd>>(l_evt));
-                }
+    if(doesCollideWithFood(newHead))
+    {
+        m_scorePort.send(std::make_unique<EventT<ScoreInd>>());
+        m_foodPort.send(std::make_unique<EventT<FoodReq>>());
+    }
+    else if (doesCollideWithWall(newHead))
+    {
+        notifyAboutFailure();
+        return;
+    }
+    else
+    {
+        for (auto &segment : m_segments) {
+            if (not --segment.ttl) {
+                repaintTile(segment, Cell_FREE);
             }
         }
     }
 
-    if (not lost) {
-        m_segments.push_front(newHead);
-        DisplayInd placeNewHead;
-        placeNewHead.x = newHead.x;
-        placeNewHead.y = newHead.y;
-        placeNewHead.value = Cell_SNAKE;
+    m_segments.push_front(newHead);
+    repaintTile(newHead, Cell_SNAKE);
 
-        m_displayPort.send(std::make_unique<EventT<DisplayInd>>(placeNewHead));
-
-        m_segments.erase(
-                    std::remove_if(
-                        m_segments.begin(),
-                        m_segments.end(),
-                        [](auto const& segment){ return not (segment.ttl > 0); }),
-                    m_segments.end());
-    }
-
+    cleanNotExistingSnakeSegments();
 }
 
 void Controller::handleDirectionChange(const DirectionInd& directionInd)
@@ -146,17 +119,9 @@ void Controller::handleFoodPositionChange(const FoodInd& receivedFood)
     if (requestedFoodCollidedWithSnake) {
         m_foodPort.send(std::make_unique<EventT<FoodReq>>());
     } else {
-        DisplayInd clearOldFood;
-        clearOldFood.x = m_foodPosition.first;
-        clearOldFood.y = m_foodPosition.second;
-        clearOldFood.value = Cell_FREE;
-        m_displayPort.send(std::make_unique<EventT<DisplayInd>>(clearOldFood));
+        repaintTile(m_foodPosition.first, m_foodPosition.second, Cell_FREE);
 
-        DisplayInd placeNewFood;
-        placeNewFood.x = receivedFood.x;
-        placeNewFood.y = receivedFood.y;
-        placeNewFood.value = Cell_FOOD;
-        m_displayPort.send(std::make_unique<EventT<DisplayInd>>(placeNewFood));
+        repaintTile(receivedFood.x, receivedFood.y, Cell_FOOD);
     }
 
     m_foodPosition = std::make_pair(receivedFood.x, receivedFood.y);
@@ -183,6 +148,69 @@ void Controller::handleNewFood(const FoodResp& requestedFood)
     }
 
     m_foodPosition = std::make_pair(requestedFood.x, requestedFood.y);
+}
+
+bool Controller::doesCollideWithSnake(const Controller::Segment &newSegment) const
+{
+    for (auto segment : m_segments) {
+        if (segment.x == newSegment.x and segment.y == newSegment.y) {
+            return true;
+        }
+    }
+    return false;
+}
+
+bool Controller::doesCollideWithWall(const Controller::Segment &newSegment) const
+{
+    return newSegment.x < 0 or newSegment.y < 0 or
+           newSegment.x >= m_mapDimension.first or
+           newSegment.y >= m_mapDimension.second;
+}
+
+bool Controller::doesCollideWithFood(const Controller::Segment &newHead) const
+{
+    return std::make_pair(newHead.x, newHead.y) == m_foodPosition;
+}
+
+void Controller::notifyAboutFailure()
+{
+    m_scorePort.send(std::make_unique<EventT<LooseInd>>());
+}
+
+void Controller::repaintTile(const Controller::Segment &position, Cell type)
+{
+    repaintTile(position.x, position.y, type);
+}
+
+void Controller::repaintTile(unsigned int x, unsigned int y, Cell type)
+{
+    DisplayInd indication{};
+    indication.x = x;
+    indication.y = y;
+    indication.value = type;
+    m_displayPort.send(std::make_unique<EventT<DisplayInd>>(indication));
+}
+
+void Controller::cleanNotExistingSnakeSegments()
+{
+    m_segments.erase(
+         std::remove_if(
+             m_segments.begin(),
+             m_segments.end(),
+             [](auto const& segment){ return not (segment.ttl > 0); }),
+         m_segments.end());
+}
+
+Controller::Segment Controller::getNewHead() const
+{
+    Segment const& currentHead = m_segments.front();
+
+    Segment newHead;
+    newHead.x = currentHead.x + ((m_currentDirection & 0b01) ? (m_currentDirection & 0b10) ? 1 : -1 : 0);
+    newHead.y = currentHead.y + (not (m_currentDirection & 0b01) ? (m_currentDirection & 0b10) ? 1 : -1 : 0);
+    newHead.ttl = currentHead.ttl;
+
+    return newHead;
 }
 
 void Controller::receive(std::unique_ptr<Event> e)
