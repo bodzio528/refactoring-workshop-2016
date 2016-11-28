@@ -16,6 +16,7 @@ target_link_libraries(${TARGET_NAME} DynamicEvents)
 enable_testing()
 set(TEST_SOURCES
     Tests/SnakeControllerTestSuite.cpp
+    Tests/SnakeControllerWrongFoodLocation.cpp
     Tests/SnakeControllerPauseTestSuite.cpp
 )
 
