@@ -19,7 +19,8 @@ UnexpectedEventException::UnexpectedEventException()
 Controller::Controller(IPort& p_displayPort, IPort& p_foodPort, IPort& p_scorePort, std::string const& p_config)
     : m_displayPort(p_displayPort),
       m_foodPort(p_foodPort),
-      m_scorePort(p_scorePort)
+      m_scorePort(p_scorePort),
+      m_paused(false)
 {
     std::istringstream istr(p_config);
     char w, f, s, d;
@@ -213,17 +214,30 @@ void Controller::handleFoodResp(std::unique_ptr<Event> e)
     updateFoodPosition(requestedFood.x, requestedFood.y, []{});
 }
 
+void Controller::handlePauseInd(std::unique_ptr<Event> e)
+{
+    m_paused = not m_paused;
+}
+
 void Controller::receive(std::unique_ptr<Event> e)
 {
     switch (e->getMessageId()) {
         case TimeoutInd::MESSAGE_ID:
-            return handleTimeoutInd();
+            if (!m_paused) {
+                return handleTimeoutInd();
+            }
+            return;
         case DirectionInd::MESSAGE_ID:
-            return handleDirectionInd(std::move(e));
+            if (!m_paused) {
+                return handleDirectionInd(std::move(e));
+            }
+            return;
         case FoodInd::MESSAGE_ID:
             return handleFoodInd(std::move(e));
         case FoodResp::MESSAGE_ID:
             return handleFoodResp(std::move(e));
+        case PauseInd::MESSAGE_ID:
+            return handlePauseInd(std::move(e));
         default:
             throw UnexpectedEventException();
     }

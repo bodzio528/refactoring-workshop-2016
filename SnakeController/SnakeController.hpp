@@ -52,6 +52,7 @@ private:
     void handleDirectionInd(std::unique_ptr<Event>);
     void handleFoodInd(std::unique_ptr<Event>);
     void handleFoodResp(std::unique_ptr<Event>);
+    void handlePauseInd(std::unique_ptr<Event>);
 
     bool isSegmentAtPosition(int x, int y) const;
     Segment calculateNewHead() const;
@@ -65,6 +66,8 @@ private:
     void updateFoodPosition(int x, int y, std::function<void()> clearPolicy);
     void sendClearOldFood();
     void sendPlaceNewFood(int x, int y);
+
+    bool m_paused;
 };
 
 } // namespace Snake
