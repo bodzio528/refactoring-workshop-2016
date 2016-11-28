@@ -18,6 +18,7 @@ enable_testing()
 set(TEST_SOURCES
     Tests/SnakeControllerTestSuite.cpp
     Tests/SnakeControllerWrongFoodLocation.cpp
+    Tests/SnakeControllerScoreIndTestSuite.cpp
 )
 set(MOCK_LIST
     Tests/Mocks/PortMock.hpp
