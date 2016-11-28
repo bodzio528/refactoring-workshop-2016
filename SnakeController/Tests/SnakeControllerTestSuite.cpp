@@ -260,8 +260,8 @@ TEST_F(SnakeEatTestSuite, test_IfFoodEncountered_SendFoodRequestAndScoreIndicati
 TEST_F(SnakeEatTestSuite, test_ReceiveFoodResp_PlaceFoodInCell)
 {
     FoodResp l_foodResp;
-    l_foodResp.x = 50;
-    l_foodResp.y = 50;
+    l_foodResp.position.x = 50;
+    l_foodResp.position.y = 50;
 
     EXPECT_CALL(displayPortMock, send_rvr(DisplayIndEq(50, 50, Cell_FOOD)));
 
@@ -271,8 +271,8 @@ TEST_F(SnakeEatTestSuite, test_ReceiveFoodResp_PlaceFoodInCell)
 TEST_F(SnakeEatTestSuite, test_ReceiveFoodRespDetectsCollision_ThenRequestNewFood)
 {
     FoodResp l_foodResp;
-    l_foodResp.x = 20;
-    l_foodResp.y = 20;
+    l_foodResp.position.x = 20;
+    l_foodResp.position.y = 20;
 
     EXPECT_CALL(foodPortMock, send_rvr(AnyFoodReq()));
 
@@ -290,8 +290,8 @@ struct SnakeNewFoodTest : SnakeTest
 TEST_F(SnakeNewFoodTest, test_ReceiveFoodInd_ClearOldFoodAndPlaceNewOne)
 {
     FoodInd l_foodInd;
-    l_foodInd.x = 30;
-    l_foodInd.y = 30;
+    l_foodInd.position.x = 30;
+    l_foodInd.position.y = 30;
 
     EXPECT_CALL(displayPortMock, send_rvr(DisplayIndEq(50, 50, Cell_FREE)));
     EXPECT_CALL(displayPortMock, send_rvr(DisplayIndEq(30, 30, Cell_FOOD)));
@@ -302,8 +302,8 @@ TEST_F(SnakeNewFoodTest, test_ReceiveFoodInd_ClearOldFoodAndPlaceNewOne)
 TEST_F(SnakeNewFoodTest, test_ReceiveFoodIndDetectsCollision_ThenRequestNewFood)
 {
     FoodInd l_foodInd;
-    l_foodInd.x = 20;
-    l_foodInd.y = 20;
+    l_foodInd.position.x = 20;
+    l_foodInd.position.y = 20;
 
     EXPECT_CALL(foodPortMock, send_rvr(AnyFoodReq()));
 

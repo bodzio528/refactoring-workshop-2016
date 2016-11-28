@@ -10,6 +10,7 @@ set(SNAKE_SOURCES
 set(SNAKE_HEADERS
     SnakeController.hpp
     SnakeInterface.hpp
+    SnakePosition.hpp
     SnakeSegments.hpp
     SnakeWorld.hpp
 )
