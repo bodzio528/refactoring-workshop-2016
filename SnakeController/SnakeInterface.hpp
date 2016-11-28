@@ -73,4 +73,9 @@ struct LooseInd
     static constexpr std::uint32_t MESSAGE_ID = 0x71;
 };
 
+struct PauseInd
+{
+    static constexpr std::uint32_t MESSAGE_ID = 0x91;
+};
+
 } // namespace Snake
