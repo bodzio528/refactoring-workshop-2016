@@ -30,6 +30,13 @@ MATCHER(AnyScoreInd, "")
     return ScoreInd::MESSAGE_ID == arg.getMessageId();
 }
 
+MATCHER_P(ScoreIndEq, p_score, "")
+{
+    *result_listener << "message with id = 0x" << std::hex << arg.getMessageId();
+    auto const& l_msg = payload<ScoreInd>(arg);
+    return ScoreInd::MESSAGE_ID == arg.getMessageId() and l_msg.score == p_score;
+}
+
 MATCHER(AnyFoodReq, "")
 {
     *result_listener << "message with id = 0x" << std::hex << arg.getMessageId();
