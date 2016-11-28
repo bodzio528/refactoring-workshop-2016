@@ -151,7 +151,7 @@ void Controller::handleDirectionInd(std::unique_ptr<Event> e)
 
 void Controller::updateFoodPosition(int x, int y, std::function<void()> clearPolicy)
 {
-    if (m_segments->isCollision(x, y)) {
+    if (m_segments->isCollision(x, y) or not m_world->contains(x, y)) {
         m_foodPort.send(std::make_unique<EventT<FoodReq>>());
         return;
     }
