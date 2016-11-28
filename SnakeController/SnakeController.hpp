@@ -36,10 +36,6 @@ public:
     void receive(std::unique_ptr<Event> e) override;
 
 private:
-    IPort& m_displayPort;
-    IPort& m_foodPort;
-    IPort& m_scorePort;
-
     std::unique_ptr<World> m_world;
     std::unique_ptr<Segments> m_segments;
 

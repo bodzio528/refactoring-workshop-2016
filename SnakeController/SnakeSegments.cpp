@@ -2,6 +2,11 @@
 
 #include <algorithm>
 
+#include "IPort.hpp"
+#include "EventT.hpp"
+
+#include "SnakeWorld.hpp"
+
 namespace Snake
 {
 
@@ -29,8 +34,10 @@ bool perpendicular(Direction dir1, Direction dir2)
 }
 } // namespace
 
-Segments::Segments(Direction direction)
-    : m_headDirection(direction)
+Segments::Segments(IPort& displayPort, IPort& scorePort, Direction direction)
+    : m_displayPort(displayPort),
+      m_scorePort(scorePort),
+      m_headDirection(direction)
 {}
 
 void Segments::addSegment(Position position)
@@ -71,6 +78,52 @@ void Segments::updateDirection(Direction newDirection)
 {
     if (perpendicular(m_headDirection, newDirection)) {
         m_headDirection = newDirection;
+    }
+}
+
+void Segments::nextStep(const World &world)
+{
+    updateSegments(nextHead(), world);
+}
+
+void Segments::removeTailSegment()
+{
+    DisplayInd clearTail;
+    clearTail.position = removeTail();
+    clearTail.value = Cell_FREE;
+
+    m_displayPort.send(std::make_unique<EventT<DisplayInd>>(clearTail));
+}
+
+void Segments::addHeadSegment(Position position)
+{
+    addHead(position);
+
+    DisplayInd placeNewHead;
+    placeNewHead.position = position;
+    placeNewHead.value = Cell_SNAKE;
+
+    m_displayPort.send(std::make_unique<EventT<DisplayInd>>(placeNewHead));
+}
+
+void Segments::removeTailSegmentIfNotScored(Position position, const World &world)
+{
+    if (world.eatFood(position)) {
+        ScoreInd l_ind{};
+        l_ind.score = m_segments.size() - 1;
+        m_scorePort.send(std::make_unique<EventT<ScoreInd>>(l_ind));
+    } else {
+        removeTailSegment();
+    }
+}
+
+void Segments::updateSegments(Position position, const World &world)
+{
+    if (isCollision(position) or not world.contains(position)) {
+        m_scorePort.send(std::make_unique<EventT<LooseInd>>());
+    } else {
+        addHeadSegment(position);
+        removeTailSegmentIfNotScored(position, world);
     }
 }
 

@@ -45,7 +45,7 @@ Position readFoodPosition(std::istream& istr)
     return position;
 }
 
-std::unique_ptr<World> readWorld(std::istream& istr)
+std::unique_ptr<World> readWorld(std::istream& istr, IPort& displayPort, IPort& foodPort)
 {
     if (not checkControl(istr, 'W')) {
         throw ConfigurationError();
@@ -53,7 +53,7 @@ std::unique_ptr<World> readWorld(std::istream& istr)
 
     auto worldDimension = readWorldDimension(istr);
     auto foodPosition = readFoodPosition(istr);
-    return std::make_unique<World>(worldDimension, foodPosition);
+    return std::make_unique<World>(displayPort, foodPort, worldDimension, foodPosition);
 }
 
 Direction readDirection(std::istream& istr)
@@ -79,15 +79,12 @@ Direction readDirection(std::istream& istr)
 }
 
 Controller::Controller(IPort& displayPort, IPort& foodPort, IPort& scorePort, std::string const& initialConfiguration)
-    : m_displayPort(displayPort),
-      m_foodPort(foodPort),
-      m_scorePort(scorePort),
-      m_paused(false)
+    : m_paused(false)
 {
     std::istringstream istr(initialConfiguration);
 
-    m_world = readWorld(istr);
-    m_segments = std::make_unique<Segments>(readDirection(istr));
+    m_world = readWorld(istr, displayPort, foodPort);
+    m_segments = std::make_unique<Segments>(displayPort, scorePort, readDirection(istr));
 
     int length;
     istr >> length;
@@ -106,74 +103,9 @@ Controller::Controller(IPort& displayPort, IPort& foodPort, IPort& scorePort, st
 Controller::~Controller()
 {}
 
-void Controller::sendPlaceNewFood(Position position)
-{
-    m_world->setFoodPosition(position);
-
-    DisplayInd placeNewFood;
-    placeNewFood.position = position;
-    placeNewFood.value = Cell_FOOD;
-
-    m_displayPort.send(std::make_unique<EventT<DisplayInd>>(placeNewFood));
-}
-
-void Controller::sendClearOldFood()
-{
-    auto foodPosition = m_world->getFoodPosition();
-
-    DisplayInd clearOldFood;
-    clearOldFood.position = foodPosition;
-    clearOldFood.value = Cell_FREE;
-
-    m_displayPort.send(std::make_unique<EventT<DisplayInd>>(clearOldFood));
-}
-
-void Controller::removeTailSegment()
-{
-    auto tailPosition = m_segments->removeTail();
-
-    DisplayInd clearTail;
-    clearTail.position = tailPosition;
-    clearTail.value = Cell_FREE;
-
-    m_displayPort.send(std::make_unique<EventT<DisplayInd>>(clearTail));
-}
-
-void Controller::addHeadSegment(Position position)
-{
-    m_segments->addHead(position);
-
-    DisplayInd placeNewHead;
-    placeNewHead.position = position;
-    placeNewHead.value = Cell_SNAKE;
-
-    m_displayPort.send(std::make_unique<EventT<DisplayInd>>(placeNewHead));
-}
-
-void Controller::removeTailSegmentIfNotScored(Position position)
-{
-    if (position == m_world->getFoodPosition()) {
-        m_scorePort.send(std::make_unique<EventT<ScoreInd>>());
-        m_foodPort.send(std::make_unique<EventT<FoodReq>>());
-    } else {
-        removeTailSegment();
-    }
-}
-
-void Controller::updateSegmentsIfSuccessfullMove(Position position)
-{
-    if (m_segments->isCollision(position) or not m_world->contains(position)) {
-        m_scorePort.send(std::make_unique<EventT<LooseInd>>());
-    } else {
-        addHeadSegment(position);
-        removeTailSegmentIfNotScored(position);
-    }
-}
-
 void Controller::handleTimeoutInd()
 {
-    auto newHead = m_segments->nextHead();
-    updateSegmentsIfSuccessfullMove(newHead);
+    m_segments->nextStep(*m_world);
 }
 
 void Controller::handleDirectionInd(std::unique_ptr<Event> e)
@@ -181,27 +113,14 @@ void Controller::handleDirectionInd(std::unique_ptr<Event> e)
     m_segments->updateDirection(payload<DirectionInd>(*e).direction);
 }
 
-void Controller::updateFoodPosition(Position position, std::function<void()> clearPolicy)
-{
-    if (m_segments->isCollision(position) or not m_world->contains(position)) {
-        m_foodPort.send(std::make_unique<EventT<FoodReq>>());
-        return;
-    }
-
-    clearPolicy();
-    sendPlaceNewFood(position);
-}
-
 void Controller::handleFoodInd(std::unique_ptr<Event> e)
 {
-    updateFoodPosition(payload<FoodInd>(*e).position, std::bind(&Controller::sendClearOldFood, this));
+    m_world->updateFoodPosition(payload<FoodResp>(*e).position, *m_segments);
 }
 
 void Controller::handleFoodResp(std::unique_ptr<Event> e)
 {
-    static auto noCleanPolicy = []{};
-
-    updateFoodPosition(payload<FoodResp>(*e).position, noCleanPolicy);
+    m_world->placeFood(payload<FoodResp>(*e).position, *m_segments);
 }
 
 void Controller::handlePauseInd(std::unique_ptr<Event> e)
