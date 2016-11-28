@@ -30,7 +30,7 @@ struct SnakeScoreTest : Test
 
 TEST_F(SnakeScoreTest, snakeOneSegmentLongShouldEmitScoreWith1)
 {
-    configureSUT("W 100 100 F 50 50 S R 1 20 20");
+    configureSUT("W 100 100 F 21 20 S R 1 20 20");
 
     EXPECT_CALL(displayPortMock, send_rvr(DisplayIndEq(21, 20, Cell_SNAKE)));
     EXPECT_CALL(foodPortMock, send_rvr(AnyFoodReq()));
@@ -40,7 +40,7 @@ TEST_F(SnakeScoreTest, snakeOneSegmentLongShouldEmitScoreWith1)
 }
 TEST_F(SnakeScoreTest, snakeThreeSegmentsLongShouldEmitScoreWith3)
 {
-    configureSUT("W 100 100 F 50 50 S R 3 20 20 19 20 18 20");
+    configureSUT("W 100 100 F 21 20 S R 3 20 20 19 20 18 20");
 
     EXPECT_CALL(displayPortMock, send_rvr(DisplayIndEq(21, 20, Cell_SNAKE)));
     EXPECT_CALL(foodPortMock, send_rvr(AnyFoodReq()));
